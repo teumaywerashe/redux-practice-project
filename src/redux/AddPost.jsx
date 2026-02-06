@@ -1,7 +1,8 @@
 import React from "react";
-import { useDispatch } from "react-redux";
-import { postAdded } from "./slices/post";
+import { useDispatch, useSelector } from "react-redux";
+import { postAdded } from "./slices/postSlice";
 import { useNavigate } from "react-router-dom";
+import { selectAllUsers } from "./slices/userSlice";
 
 function AddPost() {
   const navigate = useNavigate();
@@ -9,16 +10,21 @@ function AddPost() {
   const dispatch = useDispatch();
   const [title, setTitle] = React.useState("");
   const [content, setContent] = React.useState("");
+  const users = useSelector(selectAllUsers);
+  const [userId, setUserId] = React.useState("");
+  const onauthorsChange = (e) => {
+    setUserId(e.target.value);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     try {
       if (title.length > 0 && content.length > 0) {
-        dispatch(postAdded(title, content));
+        dispatch(postAdded(title, content, userId));
         setTitle("");
         setContent("");
         navigate("/");
-      }else{
+      } else {
         alert("Title and content cannot be empty.");
       }
     } catch (error) {
@@ -26,6 +32,12 @@ function AddPost() {
       alert("Failed to add post. Please try again.");
     }
   };
+  const canSave = Boolean(title) && Boolean(content) && Boolean(userId);
+  const userOptions = users.map((user) => (
+    <option key={user.id} value={user.id}>
+      {user.name}
+    </option>
+  ));
   return (
     <div>
       <h1>Add New Post</h1>
@@ -39,6 +51,11 @@ function AddPost() {
           placeholder="Title"
           onChange={(e) => setTitle(e.target.value)}
         />
+        <label htmlFor="author">Author:</label>
+        <select id="author" value={userId} onChange={onauthorsChange}>
+          <option value="">Authors</option>
+          {userOptions}
+        </select>
         <label htmlFor="content">Content:</label>
         <textarea
           name="content"
@@ -47,7 +64,9 @@ function AddPost() {
           placeholder="Content"
           onChange={(e) => setContent(e.target.value)}
         />
-        <button type="submit">Add Post</button>
+        <button disabled={!canSave} type="submit">
+          Add Post
+        </button>
       </form>
     </div>
   );
