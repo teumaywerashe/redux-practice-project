@@ -1,44 +1,57 @@
-import React, { useEffect } from 'react'
-import { useSelector } from 'react-redux'
-import { selectAllPost } from './slices/postSlice'
-import { useNavigate } from 'react-router-dom'
-import PostAuther from './PostAuthor'
-import TimeAgo from './TimeAgo'
-import ReactionButtons from './ReactionButtons'
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  fetchPosts,
+  getError,
+  getPostStatus,
+  selectAllPost,
+} from "./slices/postSlice";
+import { useNavigate } from "react-router-dom";
+import PostAuther from "./PostAuthor";
+import TimeAgo from "./TimeAgo";
+import ReactionButtons from "./ReactionButtons";
+import PostExerpt from "./PostExerpt";
 
 function PostList() {
-  const post=useSelector(selectAllPost)
+  const posts = useSelector(selectAllPost);
+  const status = useSelector(getPostStatus);
+  const error = useSelector(getError);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-  useEffect(()=>{
-    console.log('post changed')
-  }, [post])
-  
-const orderedPost=[...post].sort((a,b)=>b.date.localeCompare(a.date))
-  const navigate=useNavigate()
+  useEffect(() => {
+    if (status === "idle") {
+      dispatch(fetchPosts());
+    }
+  }, [status, dispatch]);
 
-  const renderedPost=orderedPost.map((post)=>{
-    return(
-      <article key={post.id}>
-        <h3>{post.title}</h3>
-        <p>{post.content.substring(0,100)}</p>
-        <p className='postCredit'>
-          by <PostAuther userId={post.userId} />
-          <TimeAgo timestamp={post.date} />
-        </p>
-     <ReactionButtons post={post}/>
-      </article>
-    )
-  })
+  let content;
+
+  if (status === "loading") {
+    content = <h1>Loading......</h1>;
+  } else if (status === "succeeded") {
+    const orderedPost = posts
+      .slice()
+      .sort((a, b) => b.date.localeCompare(a.date));
+
+    content = orderedPost.map((post) => (
+      <PostExerpt key={post.id} post={post} />
+    ));
+  } else if (status === "failed") {
+    content = <p>{error}</p>;
+  }
+
   return (
-   
-     <section>
+    <section>
       <div className="head">
-         <h2>Posts</h2><button onClick={()=>navigate('/new-post')}>+ add new post</button>
+        <h2>Posts</h2>
+        <button onClick={() => navigate("/new-post")}>
+          + add new post
+        </button>
       </div>
-     
-      {renderedPost}
+      {content}
     </section>
-  )
+  );
 }
 
-export default PostList
+export default PostList;
