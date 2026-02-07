@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { selectAllPost } from './slices/postSlice'
 import { useNavigate } from 'react-router-dom'
@@ -8,6 +8,11 @@ import ReactionButtons from './ReactionButtons'
 
 function PostList() {
   const post=useSelector(selectAllPost)
+
+  useEffect(()=>{
+    console.log('post changed')
+  }, [post])
+  
 const orderedPost=[...post].sort((a,b)=>b.date.localeCompare(a.date))
   const navigate=useNavigate()
 
