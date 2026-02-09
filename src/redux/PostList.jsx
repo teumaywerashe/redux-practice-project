@@ -45,7 +45,7 @@ function PostList() {
     <section>
       <div className="head">
         <h2>Posts</h2>
-        <button onClick={() => navigate("/new-post")}>
+        <button onClick={() => navigate("/post")}>
           + add new post
         </button>
       </div>

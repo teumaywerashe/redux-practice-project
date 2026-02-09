@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, {  useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { addNewPost } from "./slices/postSlice";
 import { useNavigate } from "react-router-dom";
@@ -17,7 +17,6 @@ function AddPost() {
   };
 
   const [addRequestStatus, setAddRequestStatus] = useState("idle");
-  //  const canSave = Boolean(title) && Boolean(body) && Boolean(id);
   const canSave =[title, body, userId].every(Boolean) && addRequestStatus === "idle";
 
   const handleSubmit = (e) => {
