@@ -1,7 +1,7 @@
-import React, { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import React from "react";
+import {  useSelector } from "react-redux";
 import {
-  fetchPosts,
+
   getError,
   getPostStatus,
   selectAllPost,
@@ -13,14 +13,9 @@ function PostList() {
   const posts = useSelector(selectAllPost);
   const status = useSelector(getPostStatus);
   const error = useSelector(getError);
-  const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (status === "idle") {
-      dispatch(fetchPosts());
-    }
-  }, [status, dispatch]);
+  
 
   let content;
 

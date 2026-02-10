@@ -7,141 +7,142 @@ import { data } from "react-router-dom";
 const POSTS_URL = "https://jsonplaceholder.typicode.com/posts";
 
 const initialState = {
-  posts: [],
-  status: "idle", // 'idle' | 'loading' | 'succeeded' | 'faild'
-  error: null,
+    posts: [],
+    status: "idle", // 'idle' | 'loading' | 'succeeded' | 'faild'
+    error: null,
 };
 
-export const fetchPosts = createAsyncThunk("posts/fetchPosts", async () => {
-  const response = await axios.get(POSTS_URL);
-  let count = 1;
-  const postsWithExtras = response.data.map((post) => ({
-    ...post,
-    date: post.date || sub(new Date(), { seconds: count++ }).toISOString(),
-    reactions: post.reactions || {
-      thumbsUp: 0,
-      wow: 0,
-      heart: 0,
-      rocket: 0,
-      coffee: 0,
-    },
-  }));
+export const fetchPosts = createAsyncThunk("posts/fetchPosts", async() => {
+    const response = await axios.get(POSTS_URL);
+    let count = 1;
+    const postsWithExtras = response.data.map((post) => ({
+        ...post,
+        date: post.date || sub(new Date(), { seconds: count++ }).toISOString(),
+        reactions: post.reactions || {
+            thumbsUp: 0,
+            wow: 0,
+            heart: 0,
+            rocket: 0,
+            coffee: 0,
+        },
+    }));
 
-  return postsWithExtras;
+    return postsWithExtras;
 });
 
-export const addNewPost = createAsyncThunk("/post/addNewPost", async (data) => {
-  const response = await axios.post(POSTS_URL, data);
-  return response.data;
-});
-
-export const UpdatePost = createAsyncThunk("/post/updatePost", async (data) => {
-  const { id } = data;
-  try {
-    const response = await axios.put(`${POSTS_URL}/post/${id}`, data);
+export const addNewPost = createAsyncThunk("/post/addNewPost", async(data) => {
+    const response = await axios.post(POSTS_URL, data);
     return response.data;
-  } catch (error) {
-    return error.message;
-  }
+});
+
+export const UpdatePost = createAsyncThunk("/post/updatePost", async(data) => {
+    const { id } = data;
+    try {
+        const response = await axios.put(`${POSTS_URL}/post/${id}`, data);
+        return response.data;
+    } catch (error) {
+        return error.message;
+    }
 });
 
 export const deletePost = createAsyncThunk(
-  "/post/deletePost",
-  async (postId) => {
-    try {
-      const response = await axios.delete(`${POSTS_URL}/post/${postId}`);
-      if (response.status === 200) return data;
-      return `${response.data}: ${response.statusText}`;
-    } catch (error) {
-      return error.message;
-    }
-  },
+    "/post/deletePost",
+    async(postId) => {
+        try {
+            const response = await axios.delete(`${POSTS_URL}/post/${postId}`);
+            if (response.status === 200) return data;
+            return `${response.data}: ${response.statusText}`;
+        } catch (error) {
+            return error.message;
+        }
+    },
 );
 
 const postSlice = createSlice({
-  name: "posts",
-  initialState,
-  reducers: {
-    postAdded: {
-      reducer(state, action) {
-        state.posts.push(action.payload);
-      },
-      prepare(title, body, userId) {
-        return {
-          payload: {
-            id: nanoid(),
-            body,
-            title,
-            userId,
-            date: new Date().toISOString(),
-            reactions: {
-              thumbsUp: 0,
-              wow: 0,
-              heart: 0,
-              rocket: 0,
-              coffee: 0,
+    name: "posts",
+    initialState,
+    reducers: {
+        postAdded: {
+            reducer(state, action) {
+                state.posts.push(action.payload);
             },
-          },
-        };
-      },
+            prepare(title, body, userId) {
+                return {
+                    payload: {
+                        id: nanoid(),
+                        body,
+                        title,
+                        userId,
+                        date: new Date().toISOString(),
+                        reactions: {
+                            thumbsUp: 0,
+                            wow: 0,
+                            heart: 0,
+                            rocket: 0,
+                            coffee: 0,
+                        },
+                    },
+                };
+            },
+        },
+        reactionAdded(state, action) {
+            const { postId, reaction } = action.payload;
+            const existingPost = state.posts.find((post) => post.id === postId);
+            if (existingPost) {
+                if (existingPost.reactions[reaction] === 0) {
+                    existingPost.reactions[reaction]++;
+                } else {
+                    existingPost.reactions[reaction]--;
+                }
+            }
+        },
     },
-    reactionAdded(state, action) {
-      const { postId, reaction } = action.payload;
-      const existingPost = state.posts.find((post) => post.id === postId);
-      if (existingPost) {
-        if (existingPost.reactions[reaction] === 0) {
-          existingPost.reactions[reaction]++;
-        } else {
-          existingPost.reactions[reaction]--;
-        }
-      }
+    extraReducers: (builder) => {
+        builder
+            .addCase(fetchPosts.pending, (state) => {
+                state.status = "loading";
+            })
+            .addCase(fetchPosts.fulfilled, (state, action) => {
+                state.status = "succeeded";
+                state.posts = action.payload;
+            })
+            .addCase(fetchPosts.rejected, (state, action) => {
+                state.status = "failed";
+                state.error = action.payload;
+            })
+            .addCase(addNewPost.fulfilled, (state, action) => {
+                action.payload.userId = Number(action.payload.userId);
+                action.payload.date = new Date().toISOString();
+                action.payload.reactions = {
+                    thumbsUp: 0,
+                    wow: 0,
+                    heart: 0,
+                    rocket: 0,
+                    coffee: 0,
+                };
+                console.log(action.payload);
+                state.posts.push(action.payload);
+            })
+            .addCase(UpdatePost.fulfilled, (state, action) => {
+                if (!action.payload.id) {
+                    console.log("payload", action.payload);
+                    console.log("Update could not complete");
+                    console.log("payload", action.payload);
+                    return;
+                }
+                const { id } = action.payload;
+                action.payload.date = new Date().toISOString();
+                const posts = state.posts.filter((post) => post.id !== id);
+                state.posts = [...posts, action.payload];
+            })
+
+        .addCase(deletePost.fulfilled, (state, action) => {
+            const { postId } = action.payload;
+
+            const posts = state.posts.filter((post) => post.id !== postId);
+            state.posts = posts;
+        });
     },
-  },
-  extraReducers: (builder) => {
-    builder
-      .addCase(fetchPosts.pending, (state) => {
-        state.status = "loading";
-      })
-      .addCase(fetchPosts.fulfilled, (state, action) => {
-        state.status = "succeeded";
-        state.posts = action.payload;
-      })
-      .addCase(fetchPosts.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.payload;
-      })
-      .addCase(addNewPost.fulfilled, (state, action) => {
-        action.payload.userId = Number(action.payload.userId);
-        action.payload.date = new Date().toISOString();
-        action.payload.reactions = {
-          thumbsUp: 0,
-          wow: 0,
-          heart: 0,
-          rocket: 0,
-          coffee: 0,
-        };
-        console.log(action.payload);
-        state.posts.push(action.payload);
-      })
-      .addCase(UpdatePost.fulfilled, (state, action) => {
-        if (!action.payload.id) {
-          console.log("Update could not complete");
-          console.log(action.payload);
-          return;
-        }
-        const { id } = action.payload;
-        action.payload.date = new Date().toISOString();
-        const posts = state.posts.filter((post) => post.id !== id);
-        state.posts = [...posts, Selection.payload];
-      })
-
-      .addCase(deletePost.fulfilled, (state, action) => {
-        const { postId } = action.payload;
-
-        const posts = state.posts.filter((post) => post.id !== postId);
-        state.posts = posts;
-      });
-  },
 });
 
 export const selectAllPost = (state) => state.posts.posts;
@@ -149,7 +150,7 @@ export const getPostStatus = (state) => state.posts.status;
 export const getError = (state) => state.posts.error;
 
 export const selectSinglePost = (state, postId) =>
-  state.posts.posts.find((post) => post.id.toString() === postId.toString());
+    state.posts.posts.find((post) => post.id.toString() === postId.toString());
 
 export const { postAdded, reactionAdded } = postSlice.actions;
 

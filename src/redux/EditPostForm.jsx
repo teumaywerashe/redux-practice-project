@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
-import { deletePost, selectSinglePost, updatePost } from "./slices/postSlice";
+import { deletePost, selectSinglePost, UpdatePost } from "./slices/postSlice";
 import { selectAllUsers } from "./slices/userSlice";
 
 function EditPostForm() {
@@ -10,13 +10,15 @@ function EditPostForm() {
 
   const users = useSelector(selectAllUsers);
   const post = useSelector((state) => selectSinglePost(state, Number(postId)));
-
+useEffect(() =>{
+  console.log(post);
+},[])
   const [title, setTitle] = useState(post?.title);
-  const [content, setContent] = useState(post?.content);
+  const [body, setBody] = useState(post?.body);
   const [userId, setUserId] = useState(post?.userId);
   const [requestStatus, setRequestStatus] = useState("idle");
 
-  const dispacth = useDispatch();
+  const dispatch = useDispatch();
 
   if (!post) {
     return (
@@ -27,29 +29,29 @@ function EditPostForm() {
   }
 
   const onTitileChnage = (e) => setTitle(e.target.value);
-  const onContentChange = (e) => setContent(e.target.value);
+  const onContentChange = (e) => setBody(e.target.value);
   const onAuthorChange = (e) => setUserId(e.target.value);
 
   const canSave =
-    [title, content, userId].every(Boolean) && requestStatus === "idle";
+    [title, body, userId].every(Boolean) && requestStatus === "idle";
 
   const onSavePostClicked = () => {
     if (canSave) {
       try {
         setRequestStatus("pending");
-        dispacth(
-          updatePost({
+        dispatch(
+          UpdatePost({
             id: post.id,
             title,
-            body: content,
+            body,
             userId,
             reactions: post.reactions,
           }),
         ).unwrap();
         setTitle("");
-        setContent("");
+        setBody("");
         setUserId("");
-        navigate(`post/${postId}`);
+        navigate(`/post/${postId}`);
       } catch (error) {
         console.log("Failed to update post", error.response.message);
       } finally {
@@ -64,7 +66,7 @@ function EditPostForm() {
       dispacth(deletePost({ postId: post.id })).unwrap();
       setTitle("");
       setTitle("");
-      setContent("");
+      setBody("");
       setUserId("");
       navigate('/');
     } catch (error) {
@@ -101,7 +103,7 @@ function EditPostForm() {
           type="text"
           id="postContent"
           name="postContent"
-          value={content}
+          value={body}
           onChange={onContentChange}
         ></textarea>
         <button type="button" onClick={onSavePostClicked} disabled={!canSave}>
