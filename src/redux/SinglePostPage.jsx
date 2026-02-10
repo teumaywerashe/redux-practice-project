@@ -1,7 +1,7 @@
 import React from "react";
 import { useSelector } from "react-redux";
 import {  selectSinglePost } from "./slices/postSlice";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import PostAuther from "./PostAuthor";
 import TimeAgo from "./TimeAgo";
 import ReactionButtons from "./ReactionButtons";
@@ -25,6 +25,7 @@ function SinglePostPage() {
       <h2>{post.title}</h2>
       <p>{post.body}</p>
       <p className="postCredit">
+         <Link to={`/post/edit/${post.id}`}>Edit Post</Link>
         <PostAuther userId={post.userId} />
         <TimeAgo timestamp={post.date} />
       </p>

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
-import { selectSinglePost } from "./slices/postSlice";
+import { deletePost, selectSinglePost, updatePost } from "./slices/postSlice";
 import { selectAllUsers } from "./slices/userSlice";
 
 function EditPostForm() {
@@ -37,13 +37,15 @@ function EditPostForm() {
     if (canSave) {
       try {
         setRequestStatus("pending");
-        dispacth({
-          id: post.id,
-          title,
-          body: content,
-          userId,
-          reactions: post.reactions,
-        }).unwrap();
+        dispacth(
+          updatePost({
+            id: post.id,
+            title,
+            body: content,
+            userId,
+            reactions: post.reactions,
+          }),
+        ).unwrap();
         setTitle("");
         setContent("");
         setUserId("");
@@ -53,6 +55,22 @@ function EditPostForm() {
       } finally {
         setRequestStatus("idle");
       }
+    }
+  };
+
+  const onDeletePostlickeed = () => {
+    try {
+      setRequestStatus("pending");
+      dispacth(deletePost({ postId: post.id })).unwrap();
+      setTitle("");
+      setTitle("");
+      setContent("");
+      setUserId("");
+      navigate('/');
+    } catch (error) {
+      console.log("Failed to delete the post", error);
+    } finally {
+      setRequestStatus("idle");
     }
   };
 
@@ -84,10 +102,14 @@ function EditPostForm() {
           id="postContent"
           name="postContent"
           value={content}
-          onChange={onContentChange}></textarea>
-      <button type="button" onClick={onSavePostClicked} disabled={!canSave}>
-        Save Post
-      </button>
+          onChange={onContentChange}
+        ></textarea>
+        <button type="button" onClick={onSavePostClicked} disabled={!canSave}>
+          Save Post
+        </button>
+         <button className="deleteButton" type="button" onClick={onDeletePostlickeed} >
+          Delete Post
+        </button>
       </form>
     </section>
   );

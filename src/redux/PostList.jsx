@@ -7,9 +7,6 @@ import {
   selectAllPost,
 } from "./slices/postSlice";
 import { useNavigate } from "react-router-dom";
-import PostAuther from "./PostAuthor";
-import TimeAgo from "./TimeAgo";
-import ReactionButtons from "./ReactionButtons";
 import PostExerpt from "./PostExerpt";
 
 function PostList() {
